@@ -227,6 +227,20 @@
                 <button class="boton boton-exito" onclick="ejecutarAnalisis()">
                     <i class="fas fa-calculator"></i> Ejecutar Análisis
                 </button>
+                <!-- Subir archivo de puntos -->
+<div style="margin-top: 15px;">
+    <input type="file" id="archivoPuntos" accept=".txt" style="margin-bottom: 10px; width: 100%;">
+    <button class="boton boton-primario" style="width: 100%;" onclick="cargarArchivoPuntos()">
+        <i class="fas fa-file-upload"></i> Cargar Puntos desde Archivo
+    </button>
+</div>
+
+<!--  Botón para limpiar todos los puntos -->
+<div style="margin-top: 10px;">
+    <button class="boton boton-advertencia" style="width: 100%;" onclick="limpiarPuntos()">
+        <i class="fas fa-trash"></i> Limpiar Todos los Puntos
+    </button>
+</div>
             </div>
         </div>
         <!-- Fin panel izquierdo -->
@@ -553,7 +567,54 @@
             }
         });
     }
+    // FUNCIÓN: cargarArchivoPuntos
+// Lee un archivo .txt con pares de coordenadas (x y) o (x,y) y los agrega a puntosDatos
+function cargarArchivoPuntos() {
+    const inputArchivo = document.getElementById('archivoPuntos');
+    const archivo = inputArchivo.files[0];
 
+    if (!archivo) {
+        alert('Por favor selecciona un archivo .txt primero.');
+        return;
+    }
+
+    const lector = new FileReader();
+    lector.onload = function (e) {
+        const contenido = e.target.result;
+        const lineas = contenido.split('\n');
+
+        lineas.forEach(linea => {
+            const [xStr, yStr] = linea.trim().split(/[\s,;]+/); // acepta espacio, coma o punto y coma
+            const x = parseFloat(xStr);
+            const y = parseFloat(yStr);
+
+            if (!isNaN(x) && !isNaN(y)) {
+                puntosDatos.push({ x, y });
+            }
+        });
+
+        actualizarTablaDatos();
+        alert('Archivo cargado correctamente con ' + puntosDatos.length + ' puntos.');
+    };
+
+    lector.readAsText(archivo);
+}
+
+// FUNCIÓN: limpiarPuntos
+// Borra todos los puntos del arreglo y actualiza la tabla
+function limpiarPuntos() {
+    if (puntosDatos.length === 0) {
+        alert('No hay puntos para limpiar.');
+        return;
+    }
+
+    const confirmar = confirm('¿Seguro que quieres eliminar todos los puntos?');
+    if (confirmar) {
+        puntosDatos = [];
+        actualizarTablaDatos();
+        alert('Se eliminaron todos los puntos.');
+    }
+}
     /* FIN del bloque JavaScript */
 </script>
 </body>
