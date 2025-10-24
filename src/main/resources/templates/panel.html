@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<!-- Documento HTML5 -->
+<html lang="es"> <!-- Idioma de la página: Español -->
+<head>
+    <!-- Metadatos -->
+    <meta charset="UTF-8"> <!-- Juego de caracteres: UTF-8, permite acentos y caracteres especiales -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Viewport para que la página responda correctamente en móviles -->
+    <title>Panel de Análisis de Regresión</title> <!-- Título que aparece en la pestaña del navegador -->
+
+    <!--
+        Importación de Font Awesome (CDN).
+        Se utiliza únicamente para los íconos visuales dentro del layout
+        (botones, cabeceras, etc.). Si no hay red, los íconos no se mostrarán,
+        pero la funcionalidad no depende de ellos.
+    -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        /* -----------------------------------------------------------------------------
+           ESTILOS CSS: estructura, tipografía y apariencia
+           Comentarios muy específicos por regla/propiedad.
+           -------------------------------------------------------------------------- */
+
+        /* Reset básico: quitar márgenes/paddings por defecto y usar box-sizing moderno.
+           box-sizing: border-box hace que padding y border se incluyan en el ancho/alto. */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        /* Estilo base del body:
+           - Fuente principal: Inter (si no está disponible, usa sans-serif genérica).
+           - Fondo: degradado diagonal (dos tonos violeta).
+           - min-height asegura que el fondo cubra la altura de la ventana.
+           - color define el color de texto principal usado dentro del cuerpo. */
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        /* Contenedor principal que centra y limita el ancho máximo del contenido.
+           - max-width: 1400px evita que el layout se expanda demasiado en pantallas grandes.
+           - margin: 0 auto centra el contenedor horizontalmente. */
+        .contenedor-panel {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Encabezado superior:
+           - text-align centra texto y elementos hijos.
+           - margin-bottom separa del resto del contenido. */
+        .encabezado {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        /* Título principal: tamaño, peso y sombra para legibilidad sobre fondo degradado. */
+        .encabezado h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        /* Grid principal del panel:
+           - grid-template-columns define dos columnas: una fija (400px) y otra flexible (1fr).
+           - gap define el espacio entre columnas y filas. */
+        .grilla-panel {
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+
+        /* Estilo general de las "tarjeta" (bloques que contienen UI):
+           - fondo blanco semitransparente, borde redondeado, padding interno, sombra. */
+        .tarjeta {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Título dentro de cada tarjeta: usa flex para alinear ícono + texto.
+           gap separa ícono y texto. */
+        .titulo-tarjeta {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        /* Estilos base para botones:
+           - display flex para íconos + texto alineados.
+           - gap separa icono y texto.
+           - cursor pointer señala interactividad. */
+        .boton {
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Variantes de botones con colores y gradientes.
+           Las clases aplicadas en HTML definen el estilo visual. */
+        .boton-primario { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .boton-exito { background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); color: white; width: 100%; }
+        .boton-advertencia { background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%); color: white; }
+
+        /* Tabla de datos: ancho completo y colapsa bordes para apariencia compacta */
+        .tabla-datos table { width: 100%; border-collapse: collapse; }
+        /* Cabeceras con degradado para contraste */
+        .tabla-datos th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px;
+        }
+        /* Celda normal: padding y línea inferior como separador */
+        .tabla-datos td { padding: 12px; border-bottom: 1px solid #e2e8f0; }
+
+        /* Grid de estadísticas (resultado numérico):
+           auto-fit + minmax permite que el layout cambie según ancho disponible. */
+        .grilla-estadisticas {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        /* Contenedor del gráfico */
+        .contenedor-grafico {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            height: 400px;
+            border: 1px solid #e2e8f0;
+        }
+
+        /* Media queries: adaptaciones para pantallas pequeñas */
+        @media (max-width: 1024px) {
+            .grilla-panel {
+                grid-template-columns: 1fr; /* una sola columna en pantallas medias */
+                gap: 20px;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .encabezado h1 { font-size: 2rem; } /* ajustar tamaño de título en móviles */
+        }
+    </style>
+</head>
+
+<body>
+<!-- Contenedor principal que envuelve toda la UI -->
+<div class="contenedor-panel">
+
+    <!-- Encabezado con título e información breve -->
+    <div class="encabezado">
+        <!-- Icono + título -->
+        <h1><i class="fas fa-chart-line"></i> Panel de Análisis de Regresión</h1>
+        <!-- Pequeña descripción del propósito del panel -->
+        <p>Plataforma de análisis y visualización de regresión lineal</p>
+    </div>
+
+    <!-- Grid principal: columna izquierda (entrada) + derecha (resultados) -->
+    <div class="grilla-panel">
+
+        <!-- -------------- PANEL IZQUIERDO: Entrada de datos -------------- -->
+        <div class="tarjeta">
+            <div class="titulo-tarjeta">
+                <i class="fas fa-database"></i> Panel de Entrada de Datos
+            </div>
+
+            <!-- Contenedor para mostrar alertas (vacío al inicio) -->
+            <div id="contenedor-alertas"></div>
+
+            <!-- Sección de inputs y botones -->
+            <div class="seccion-entrada">
+
+                <!-- Fila que contiene campo X, campo Y y botón Agregar -->
+                <div class="fila-entrada">
+
+                    <!-- Grupo: Valor X -->
+                    <div class="grupo-formulario">
+                        <label>Valor X</label>
+                        <!-- input type="number" permite entrada numérica. step="any" acepta decimales. -->
+                        <input type="number" id="entradaX" placeholder="Ingresa X" step="any">
+                    </div>
+
+                    <!-- Grupo: Valor Y -->
+                    <div class="grupo-formulario">
+                        <label>Valor Y</label>
+                        <input type="number" id="entradaY" placeholder="Ingresa Y" step="any">
+                    </div>
+
+                    <!-- Botón Agregar: ejecuta la función agregarPuntoDatos() en onclick -->
+                    <button class="boton boton-primario" onclick="agregarPuntoDatos()">
+                        <i class="fas fa-plus"></i> Agregar
+                    </button>
+                </div>
+
+                <!-- Tabla donde se insertan dinámicamente las filas con los puntos -->
+                <div class="tabla-datos">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>X</th>
+                            <th>Y</th>
+                            <th>Acción</th>
+                        </tr>
+                        </thead>
+                        <!-- tbody vacío: se completará desde JavaScript vía DOM -->
+                        <tbody id="cuerpoTablaDatos"></tbody>
+                    </table>
+                </div>
+
+                <!-- Botón principal que solicita el análisis al backend -->
+                <button class="boton boton-exito" onclick="ejecutarAnalisis()">
+                    <i class="fas fa-calculator"></i> Ejecutar Análisis
+                </button>
+            </div>
+        </div>
+        <!-- Fin panel izquierdo -->
+
+        <!-- -------------- PANEL DERECHO: Resultados -------------- -->
+        <div class="tarjeta">
+            <div class="titulo-tarjeta">
+                <i class="fas fa-chart-area"></i> Resultados del Análisis
+            </div>
+
+            <!-- Panel oculto inicialmente; se muestra cuando hay resultado -->
+            <div id="panelResultados" style="display: none;">
+                <!-- Área donde se mostrará la ecuación formateada -->
+                <div class="mostrar-ecuacion" id="resultadoEcuacion">y = mx + b</div>
+
+                <div class="grilla-estadisticas">
+                    <!-- Cada tarjeta estadística muestra un valor calculado -->
+                    <div class="tarjeta-estadistica">
+                        <div id="resultadoPendiente">--</div>
+                        <div>Pendiente (m)</div>
+                    </div>
+
+                    <div class="tarjeta-estadistica">
+                        <div id="resultadoInterseccion">--</div>
+                        <div>Intersección Y (b)</div>
+                    </div>
+
+                    <div class="tarjeta-estadistica">
+                        <div id="resultadoRCuadrado">--</div>
+                        <div>Coeficiente R²</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mensaje mostrado cuando no hay resultados disponibles -->
+            <div id="resultadosVacios" class="estado-vacio">
+                <i class="fas fa-chart-line"></i>
+                <h3>Sin Análisis Disponible</h3>
+            </div>
+        </div>
+        <!-- Fin panel derecho -->
+
+    </div> <!-- Fin grilla-panel -->
+
+    <!-- -------------- PANEL INFERIOR: Visualización (gráfico) -------------- -->
+    <div class="tarjeta grilla-resultados">
+        <div class="titulo-tarjeta">
+            <i class="fas fa-project-diagram"></i> Visualización de Datos
+        </div>
+        <!-- Canvas donde Chart.js renderiza el gráfico -->
+        <div class="contenedor-grafico">
+            <canvas id="graficoRegresion"></canvas>
+        </div>
+    </div>
+
+</div> <!-- Fin contenedor-panel -->
+
+<!-- ------------------- Librería Chart.js (CDN) -------------------
+     Usada para graficar puntos (scatter) y líneas.
+     Versión incluida: 4.4.0 (se importa el bundle UMD).
+     Si no carga, revisar conexión a internet o reemplazar por copia local.
+----------------------------------------------------------------- -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<script>
+    /* -----------------------------------------------------------------------------
+       JAVASCRIPT: lógica de interacción, envío al backend y visualización.
+       Comentarios minuciosos por cada línea/operación.
+       -------------------------------------------------------------------------- */
+
+    // VARIABLES GLOBALES
+    let puntosDatos = []; // Array que guarda objetos {x: Number, y: Number}
+    let graficoAnalisis = null; // Referencia a la instancia de Chart (se usa para destruirla antes de recrear)
+
+    // FUNCIÓN: agregarPuntoDatos
+    // Toma los valores de los inputs, valida y agrega un punto al arreglo.
+    function agregarPuntoDatos() {
+        // Obtener texto de inputs y convertir a número (parseFloat permite decimales)
+        const x = parseFloat(document.getElementById('entradaX').value);
+        const y = parseFloat(document.getElementById('entradaY').value);
+
+        // Validación: isNaN verifica que la conversión haya sido exitosa y sea número válido
+        if (isNaN(x) || isNaN(y)) {
+            // Si alguno no es número, se muestra alerta nativa del navegador (puedes cambiar por UI)
+            return alert('Valores inválidos');
+        }
+
+        // Empujar el nuevo punto en formato { x: Number, y: Number }
+        puntosDatos.push({ x, y });
+
+        // Actualizar la representación de la tabla con el nuevo punto añadido
+        actualizarTablaDatos();
+
+        // Opcional: limpiar campos después de agregar para mejorar la UX
+        document.getElementById('entradaX').value = '';
+        document.getElementById('entradaY').value = '';
+        document.getElementById('entradaX').focus(); // Deja el cursor en el input X
+    }
+
+    // FUNCIÓN: actualizarTablaDatos
+    // Reconstruye el tbody de la tabla a partir del arreglo puntosDatos.
+    function actualizarTablaDatos() {
+        // Referencia al tbody donde se insertarán las filas
+        const tbody = document.getElementById('cuerpoTablaDatos');
+
+        // Limpiar contenido previo (evita duplicados)
+        tbody.innerHTML = '';
+
+        // Iterar sobre puntosDatos y crear una fila HTML por cada punto
+        puntosDatos.forEach((p, i) => {
+            // Construcción de fila: índice (i+1), x, y y botón para eliminar
+            // Nota: usar innerHTML += para simplicidad; para datasets grandes es mejor crear elementos con createElement.
+            tbody.innerHTML += `
+                    <tr>
+                        <td>${i + 1}</td>
+                        <td>${p.x}</td>
+                        <td>${p.y}</td>
+                        <td>
+                            <!-- Botón que llama a eliminarPunto con el índice del elemento -->
+                            <button onclick="eliminarPunto(${i})">X</button>
+                        </td>
+                    </tr>`;
+        });
+
+        // Si se desea, podríamos actualizar un contador visible (no obligatorio en esta versión)
+        // document.getElementById('contadorPuntos').textContent = puntosDatos.length;
+    }
+
+    // FUNCIÓN: eliminarPunto
+    // Remueve del arreglo el punto en la posición indicada y actualiza la tabla.
+    function eliminarPunto(i) {
+        // splice remove 1 elemento desde la posición i
+        puntosDatos.splice(i, 1);
+
+        // Re-renderizar la tabla para reflejar el cambio
+        actualizarTablaDatos();
+
+        // Si el gráfico está visible y ya no hay suficientes puntos, podríamos ocultarlo:
+        // if (puntosDatos.length < 2) ocultarResultados(); // (función no incluida aquí)
+    }
+
+    // FUNCIÓN: ejecutarAnalisis
+    // Envía los puntos al backend (/api/analisis/regresion) mediante fetch, espera resultado y lo muestra.
+    async function ejecutarAnalisis() {
+        try {
+            // Petición POST al endpoint del backend; content-type JSON
+            const res = await fetch('/api/analisis/regresion', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                // El formato esperado por backend: { puntos: [{x:..., y:...}, ...] }
+                body: JSON.stringify({ puntos: puntosDatos })
+            });
+
+            // Si la respuesta no es OK (status 200-299), lanzamos excepción para manejar error
+            if (!res.ok) {
+                // Extraer mensaje si el backend lo envía; aquí se lanza un error genérico
+                const text = await res.text().catch(() => null);
+                throw new Error('Error del servidor: ' + (text || res.status));
+            }
+
+            // Parsear la respuesta JSON (debe contener pendiente, interseccion, ecuacion, rCuadrado, puntos)
+            const resultado = await res.json();
+
+            // Llamar a la función que actualiza la UI con los resultados recibidos
+            mostrarResultadosAnalisis(resultado);
+        } catch (error) {
+            // Manejo sencillo de errores: log en consola y alerta
+            console.error('Error al ejecutar el análisis:', error);
+            alert('Error en el análisis: ' + (error.message || error));
+        }
+    }
+
+    // FUNCIÓN: mostrarResultadosAnalisis
+    // Recibe el objeto resultado (desde el backend) y actualiza el DOM para mostrar los valores.
+    function mostrarResultadosAnalisis(r) {
+        // Mostrar el panel de resultados (estaba oculto con display:none)
+        const panelResultados = document.getElementById('panelResultados');
+        const resultadosVacios = document.getElementById('resultadosVacios');
+
+        if (panelResultados && resultadosVacios) {
+            panelResultados.style.display = 'block';
+            resultadosVacios.style.display = 'none';
+        }
+
+        // Asignar la ecuación tal cual viene del backend (string ya formateado)
+        // Protección: si r.ecuacion no existe, mostrar 'N/A'
+        document.getElementById('resultadoEcuacion').textContent = r.ecuacion || 'N/A';
+
+        // Mostrar pendiente: convertimos a Number y formateamos a 4 decimales
+        // Validamos que r.pendiente sea numérico antes de usar toFixed
+        if (r.pendiente !== undefined && r.pendiente !== null && !isNaN(Number(r.pendiente))) {
+            document.getElementById('resultadoPendiente').textContent = Number(r.pendiente).toFixed(4);
+        } else {
+            document.getElementById('resultadoPendiente').textContent = 'N/A';
+        }
+
+        // Mostrar intersección (b) con misma validación
+        if (r.interseccion !== undefined && r.interseccion !== null && !isNaN(Number(r.interseccion))) {
+            document.getElementById('resultadoInterseccion').textContent = Number(r.interseccion).toFixed(4);
+        } else {
+            document.getElementById('resultadoInterseccion').textContent = 'N/A';
+        }
+
+        // Mostrar R²: puede venir como null/undefined si no definió en backend (ej. varianza 0)
+        if (r.rCuadrado !== undefined && r.rCuadrado !== null && !isNaN(Number(r.rCuadrado))) {
+            document.getElementById('resultadoRCuadrado').textContent = Number(r.rCuadrado).toFixed(4);
+        } else {
+            document.getElementById('resultadoRCuadrado').textContent = 'N/A';
+        }
+
+        // Llamar al render del gráfico pasando el objeto resultado
+        crearVisualizacion(r);
+    }
+
+    // FUNCIÓN: crearVisualizacion
+    // Usa Chart.js para dibujar un scatter con puntos y una línea de regresión.
+    function crearVisualizacion(r) {
+        // Obtener el contexto 2D del canvas donde se dibujará
+        const canvas = document.getElementById('graficoRegresion');
+
+        // Validación: si no existe el canvas evitamos fallos
+        if (!canvas) {
+            console.error('Canvas para gráfico no encontrado (id=graficoRegresion)');
+            return;
+        }
+
+        const ctx = canvas.getContext('2d');
+
+        // Si existía un gráfico anterior, destruirlo para evitar duplicados/errores de Chart.js
+        if (graficoAnalisis) {
+            try {
+                graficoAnalisis.destroy();
+            } catch (e) {
+                // Si falla la destrucción, lo registramos pero seguimos (no bloqueante)
+                console.warn('Error destruyendo gráfico previo:', e);
+            }
+            graficoAnalisis = null;
+        }
+
+        // Extraer valores de X para calcular rango (mínimo y máximo)
+        // Protecciones: si r.puntos no existe o está vacío, no intentamos graficar
+        if (!r.puntos || !Array.isArray(r.puntos) || r.puntos.length === 0) {
+            console.error('No hay puntos para visualizar');
+            return;
+        }
+
+        // Mapear Xs para calcular min y max; uso spread operator con Math.min/Math.max
+        const valoresX = r.puntos.map(p => Number(p.x));
+        const minX = Math.min(...valoresX);
+        const maxX = Math.max(...valoresX);
+
+        // Construir los dos puntos que definen la línea de regresión:
+        // y1 = m * minX + b, y2 = m * maxX + b
+        // Se asume que r.pendiente y r.interseccion existen y son números (ya validados)
+        const lineaRegresion = [
+            { x: minX, y: Number(r.pendiente) * minX + Number(r.interseccion) },
+            { x: maxX, y: Number(r.pendiente) * maxX + Number(r.interseccion) }
+        ];
+
+        // Creación de la instancia Chart.js
+        // Nota: Chart.js v4 API usa new Chart(ctx, config)
+        graficoAnalisis = new Chart(ctx, {
+            type: 'scatter', // Tipo principal: scatter (puntos)
+            data: {
+                datasets: [
+                    // Primer dataset: puntos de datos reales (scatter)
+                    {
+                        label: 'Puntos',
+                        data: r.puntos.map(p => ({ x: Number(p.x), y: Number(p.y) })), // asegurar número
+                        backgroundColor: '#667eea',
+                        borderColor: '#5a67d8',
+                        pointRadius: 6,
+                        pointHoverRadius: 8,
+                        pointBorderColor: 'white'
+                    },
+                    // Segundo dataset: línea de regresión (tipo line)
+                    {
+                        label: 'Línea',
+                        type: 'line',
+                        data: lineaRegresion,
+                        borderColor: '#ed8936',
+                        borderWidth: 2,
+                        fill: false,
+                        pointRadius: 0,
+                        tension: 0 // línea recta sin curvatura
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false, // permite que el contenedor defina la altura
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            // Opcional: formateo de tooltip para mostrar valores con 4 decimales
+                            label: function(context) {
+                                const x = context.parsed.x;
+                                const y = context.parsed.y;
+                                return `${context.dataset.label}: (${x.toFixed(4)}, ${y.toFixed(4)})`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        type: 'linear',
+                        position: 'bottom',
+                        title: {
+                            display: true,
+                            text: 'X'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Y'
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    /* FIN del bloque JavaScript */
+</script>
+</body>
+</html>
