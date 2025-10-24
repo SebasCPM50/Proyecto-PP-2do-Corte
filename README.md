@@ -43,7 +43,7 @@ Aplicación web para análisis de regresión lineal con interfaz moderna tipo da
 ### Si es en Terminal
 
 1. **Ir a la carpeta del proyecto**
-   - cd Proyecto-PP-2do-Corte
+   - cd Proyecto-PP-2do-Corte-master
 
 2. **Dar permisos (solo si está en Mac/Linux)**
    - chmod +x gradlew
