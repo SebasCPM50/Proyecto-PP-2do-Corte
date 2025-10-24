@@ -43,15 +43,26 @@ Aplicación web para análisis de regresión lineal con interfaz moderna tipo da
 ### Si es en Terminal
 
 1. **Ir a la carpeta del proyecto**
-   - cd calculadora-regresion-lineal-mrd
+   - cd Proyecto-PP-2do-Corte
 
 2. **Dar permisos (solo si está en Mac/Linux)**
    - chmod +x gradlew
 
-3. **Compilar y ejecutar con Gradle Wrapper**
-   - ./gradlew run        (En Mac o Linux)
-   - gradlew.bat run      (En Windows)
+3. **Limpiar y compilar el proyecto**
+   - En Windows (PowerShell): .\gradlew.bat clean build
 
+   - En macOS / Linux: ./gradlew clean build
+
+4. **Ejecutar**
+   - En Windows:
+   - $env:PORT="8080"; .\gradlew.bat run
+   - En macOS / Linux:
+   - PORT=8080 ./gradlew run
+
+5. **LocalHost**
+   - Abrir en el navegador en la siguiente dirección
+   - http://localhost:8080
+   - Ctrl + C para detener la ejecución
 ---
 
 ## Cómo Usar
